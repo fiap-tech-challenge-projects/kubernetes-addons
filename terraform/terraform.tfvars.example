@@ -1,0 +1,24 @@
+# =============================================================================
+# Exemplo de Configuracao - Kubernetes Addons
+# =============================================================================
+# Copie este arquivo para terraform.tfvars e ajuste os valores
+# =============================================================================
+
+# AWS Configuration
+aws_region = "us-east-1"
+
+# Environment
+environment = "staging"  # staging ou production
+
+# Application Namespace
+app_namespace = "ftc-app"
+
+# AWS Load Balancer Controller
+enable_aws_lb_controller = true
+aws_lb_controller_version = "1.6.2"
+
+# SigNoz (Observability)
+enable_signoz = false  # true para habilitar (requer mais recursos)
+signoz_namespace = "signoz"
+signoz_chart_version = "0.32.0"
+signoz_storage_size = "20Gi"
