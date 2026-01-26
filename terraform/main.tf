@@ -43,7 +43,7 @@ data "terraform_remote_state" "eks" {
 
   config = {
     bucket = "fiap-tech-challenge-tf-state-${data.aws_caller_identity.current.account_id}"
-    key    = "kubernetes-core-infra/terraform.tfstate"
+    key    = "env:/${var.environment}/kubernetes-core-infra/terraform.tfstate"
     region = var.aws_region
   }
 }
