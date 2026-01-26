@@ -71,7 +71,7 @@ variable "app_namespace" {
 variable "enable_signoz" {
   description = "Habilitar instalacao do SigNoz para observabilidade"
   type        = bool
-  default     = false  # Disabled by default for faster deployment
+  default     = false # Disabled by default for faster deployment
 }
 
 variable "signoz_namespace" {
