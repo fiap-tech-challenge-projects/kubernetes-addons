@@ -142,12 +142,12 @@ resource "helm_release" "signoz" {
         }
         resources = {
           requests = {
-            cpu    = "1000m"  # Production: 1 CPU guaranteed
-            memory = "4Gi"    # Production: 4GB guaranteed
+            cpu    = "1000m" # Production: 1 CPU guaranteed
+            memory = "4Gi"   # Production: 4GB guaranteed
           }
           limits = {
-            cpu    = "2000m"  # Production: up to 2 CPU
-            memory = "8Gi"    # Production: up to 8GB
+            cpu    = "2000m" # Production: up to 2 CPU
+            memory = "8Gi"   # Production: up to 8GB
           }
         }
       }
@@ -159,12 +159,12 @@ resource "helm_release" "signoz" {
       queryService = {
         resources = {
           requests = {
-            cpu    = "500m"   # Production: 0.5 CPU
-            memory = "1Gi"    # Production: 1GB
+            cpu    = "500m" # Production: 0.5 CPU
+            memory = "1Gi"  # Production: 1GB
           }
           limits = {
-            cpu    = "1000m"  # Production: up to 1 CPU
-            memory = "2Gi"    # Production: up to 2GB
+            cpu    = "1000m" # Production: up to 1 CPU
+            memory = "2Gi"   # Production: up to 2GB
           }
         }
       }
@@ -174,12 +174,12 @@ resource "helm_release" "signoz" {
       frontend = {
         resources = {
           requests = {
-            cpu    = "200m"   # Production: 0.2 CPU
-            memory = "512Mi"  # Production: 512MB
+            cpu    = "200m"  # Production: 0.2 CPU
+            memory = "512Mi" # Production: 512MB
           }
           limits = {
-            cpu    = "500m"   # Production: up to 0.5 CPU
-            memory = "1Gi"    # Production: up to 1GB
+            cpu    = "500m" # Production: up to 0.5 CPU
+            memory = "1Gi"  # Production: up to 1GB
           }
         }
       }
@@ -189,12 +189,12 @@ resource "helm_release" "signoz" {
       otelCollector = {
         resources = {
           requests = {
-            cpu    = "500m"   # Production: 0.5 CPU
-            memory = "1Gi"    # Production: 1GB
+            cpu    = "500m" # Production: 0.5 CPU
+            memory = "1Gi"  # Production: 1GB
           }
           limits = {
-            cpu    = "1000m"  # Production: up to 1 CPU
-            memory = "2Gi"    # Production: up to 2GB
+            cpu    = "1000m" # Production: up to 1 CPU
+            memory = "2Gi"   # Production: up to 2GB
           }
         }
       }
@@ -205,12 +205,12 @@ resource "helm_release" "signoz" {
         enabled = true
         resources = {
           requests = {
-            cpu    = "100m"   # Production: 0.1 CPU
-            memory = "256Mi"  # Production: 256MB
+            cpu    = "100m"  # Production: 0.1 CPU
+            memory = "256Mi" # Production: 256MB
           }
           limits = {
-            cpu    = "200m"   # Production: up to 0.2 CPU
-            memory = "512Mi"  # Production: up to 512MB
+            cpu    = "200m"  # Production: up to 0.2 CPU
+            memory = "512Mi" # Production: up to 512MB
           }
         }
       }
