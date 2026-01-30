@@ -94,9 +94,32 @@ resource "helm_release" "metrics_server" {
   version    = "3.11.0"
   namespace  = "kube-system"
 
+  timeout = 600 # 10 minutes for Free Tier t3.micro
+
   set {
     name  = "args[0]"
     value = "--kubelet-insecure-tls"
+  }
+
+  # FREE TIER: Reduce resource requests for t3.micro (1GB RAM)
+  set {
+    name  = "resources.requests.cpu"
+    value = "50m"
+  }
+
+  set {
+    name  = "resources.requests.memory"
+    value = "64Mi"
+  }
+
+  set {
+    name  = "resources.limits.cpu"
+    value = "100m"
+  }
+
+  set {
+    name  = "resources.limits.memory"
+    value = "128Mi"
   }
 }
 
