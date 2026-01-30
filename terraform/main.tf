@@ -91,6 +91,8 @@ provider "helm" {
 # -----------------------------------------------------------------------------
 
 locals {
-  cluster_name = data.terraform_remote_state.eks.outputs.cluster_name
-  vpc_id       = data.terraform_remote_state.eks.outputs.vpc_id
+  cluster_name               = data.terraform_remote_state.eks.outputs.cluster_name
+  vpc_id                     = data.terraform_remote_state.eks.outputs.vpc_id
+  aws_lb_controller_role_arn = data.terraform_remote_state.eks.outputs.aws_lb_controller_role_arn
+  # AWS ACADEMY: Comment out the line above if using LabRole (no IRSA available)
 }

@@ -65,12 +65,12 @@ resource "helm_release" "aws_lb_controller" {
     value = "aws-load-balancer-controller"
   }
 
-  # NOTE: AWS Academy - Cannot use IRSA, LB Controller will use node role (LabRole)
-  # In production, uncomment this to use dedicated IRSA:
-  # set {
-  #   name  = "serviceAccount.annotations.eks\\.amazonaws\\.com/role-arn"
-  #   value = aws_iam_role.aws_lb_controller[0].arn
-  # }
+  # Production: Use dedicated IRSA role for AWS Load Balancer Controller
+  set {
+    name  = "serviceAccount.annotations.eks\\.amazonaws\\.com/role-arn"
+    value = local.aws_lb_controller_role_arn
+  }
+  # AWS ACADEMY: Comment out the IRSA annotation above - LB Controller will use node role (LabRole)
 
   set {
     name  = "region"
@@ -131,7 +131,7 @@ resource "helm_release" "signoz" {
   version    = var.signoz_chart_version
   namespace  = var.signoz_namespace
 
-  # Valores customizados para AWS Academy (recursos limitados)
+  # Production configuration with adequate resources
   values = [
     yamlencode({
       # ClickHouse configuration
@@ -142,72 +142,79 @@ resource "helm_release" "signoz" {
         }
         resources = {
           requests = {
-            cpu    = "100m"
-            memory = "256Mi"
+            cpu    = "1000m" # Production: 1 CPU guaranteed
+            memory = "4Gi"   # Production: 4GB guaranteed
           }
           limits = {
-            cpu    = "500m"
-            memory = "1Gi"
+            cpu    = "2000m" # Production: up to 2 CPU
+            memory = "8Gi"   # Production: up to 8GB
           }
         }
       }
+      # AWS ACADEMY: Use reduced resources to fit in t3.medium nodes
+      # clickhouse.resources.requests: cpu="100m", memory="256Mi"
+      # clickhouse.resources.limits: cpu="500m", memory="1Gi"
 
       # Query Service
       queryService = {
         resources = {
           requests = {
-            cpu    = "100m"
-            memory = "256Mi"
+            cpu    = "500m" # Production: 0.5 CPU
+            memory = "1Gi"  # Production: 1GB
           }
           limits = {
-            cpu    = "500m"
-            memory = "512Mi"
+            cpu    = "1000m" # Production: up to 1 CPU
+            memory = "2Gi"   # Production: up to 2GB
           }
         }
       }
+      # AWS ACADEMY: Use cpu="100m", memory="256Mi" (requests) and cpu="500m", memory="512Mi" (limits)
 
       # Frontend
       frontend = {
         resources = {
           requests = {
-            cpu    = "50m"
-            memory = "128Mi"
+            cpu    = "200m"  # Production: 0.2 CPU
+            memory = "512Mi" # Production: 512MB
           }
           limits = {
-            cpu    = "200m"
-            memory = "256Mi"
+            cpu    = "500m" # Production: up to 0.5 CPU
+            memory = "1Gi"  # Production: up to 1GB
           }
         }
       }
+      # AWS ACADEMY: Use cpu="50m", memory="128Mi" (requests) and cpu="200m", memory="256Mi" (limits)
 
       # OTel Collector
       otelCollector = {
         resources = {
           requests = {
-            cpu    = "100m"
-            memory = "256Mi"
+            cpu    = "500m" # Production: 0.5 CPU
+            memory = "1Gi"  # Production: 1GB
           }
           limits = {
-            cpu    = "500m"
-            memory = "512Mi"
+            cpu    = "1000m" # Production: up to 1 CPU
+            memory = "2Gi"   # Production: up to 2GB
           }
         }
       }
+      # AWS ACADEMY: Use cpu="100m", memory="256Mi" (requests) and cpu="500m", memory="512Mi" (limits)
 
       # Alertmanager
       alertmanager = {
         enabled = true
         resources = {
           requests = {
-            cpu    = "50m"
-            memory = "64Mi"
+            cpu    = "100m"  # Production: 0.1 CPU
+            memory = "256Mi" # Production: 256MB
           }
           limits = {
-            cpu    = "100m"
-            memory = "128Mi"
+            cpu    = "200m"  # Production: up to 0.2 CPU
+            memory = "512Mi" # Production: up to 512MB
           }
         }
       }
+      # AWS ACADEMY: Use cpu="50m", memory="64Mi" (requests) and cpu="100m", memory="128Mi" (limits)
     })
   ]
 
@@ -217,41 +224,49 @@ resource "helm_release" "signoz" {
 }
 
 # -----------------------------------------------------------------------------
-# StorageClass para GP3 (performance melhor)
+# StorageClass para GP3 (performance melhor que GP2)
 # -----------------------------------------------------------------------------
-# NOTE: Commented out for AWS Academy - requires EBS CSI Driver
-# resource "kubernetes_storage_class" "gp3" {
-#   metadata {
-#     name = "gp3"
-#     annotations = {
-#       "storageclass.kubernetes.io/is-default-class" = "true"
-#     }
-#   }
-#
-#   storage_provisioner    = "ebs.csi.aws.com"
-#   reclaim_policy         = "Delete"
-#   volume_binding_mode    = "WaitForFirstConsumer"
-#   allow_volume_expansion = true
-#
-#   parameters = {
-#     type      = "gp3"
-#     encrypted = "true"
-#   }
-#
-#   depends_on = [aws_eks_addon.ebs_csi]
-# }
+# Production: Use GP3 as default storage class (better performance/cost ratio)
+# Requires EBS CSI Driver addon to be enabled in kubernetes-core-infra
 
-# Remover default da gp2
-# NOTE: Commented out for AWS Academy - requires EBS CSI Driver
-# resource "kubernetes_annotations" "gp2_non_default" {
-#   api_version = "storage.k8s.io/v1"
-#   kind        = "StorageClass"
-#   metadata {
-#     name = "gp2"
-#   }
-#   annotations = {
-#     "storageclass.kubernetes.io/is-default-class" = "false"
-#   }
-#
-#   depends_on = [kubernetes_storage_class.gp3]
-# }
+resource "kubernetes_storage_class" "gp3" {
+  metadata {
+    name = "gp3"
+    annotations = {
+      "storageclass.kubernetes.io/is-default-class" = "true"
+    }
+  }
+
+  storage_provisioner    = "ebs.csi.aws.com"
+  reclaim_policy         = "Delete"
+  volume_binding_mode    = "WaitForFirstConsumer"
+  allow_volume_expansion = true
+
+  parameters = {
+    type      = "gp3"
+    encrypted = "true"
+  }
+}
+
+# Remove default annotation from gp2
+resource "kubernetes_annotations" "gp2_non_default" {
+  api_version = "storage.k8s.io/v1"
+  kind        = "StorageClass"
+
+  metadata {
+    name = "gp2"
+  }
+
+  annotations = {
+    "storageclass.kubernetes.io/is-default-class" = "false"
+  }
+
+  depends_on = [kubernetes_storage_class.gp3]
+}
+
+# =============================================================================
+# AWS ACADEMY VERSION (COMMENTED OUT)
+# =============================================================================
+# AWS Academy: EBS CSI Driver may cause timeout issues without proper IRSA
+# If you need to disable GP3 storage class, comment out the resources above
+# and the cluster will use the default GP2 storage class
