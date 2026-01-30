@@ -107,3 +107,13 @@ variable "aws_lb_controller_version" {
   type        = string
   default     = "1.6.2"
 }
+
+# -----------------------------------------------------------------------------
+# Metrics Server
+# -----------------------------------------------------------------------------
+
+variable "enable_metrics_server" {
+  description = "Habilitar Metrics Server (necessario para HPA)"
+  type        = bool
+  default     = false # Disabled for Free Tier (context deadline exceeded on t3.micro)
+}

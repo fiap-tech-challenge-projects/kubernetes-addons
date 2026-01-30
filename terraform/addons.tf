@@ -86,8 +86,13 @@ resource "helm_release" "aws_lb_controller" {
 # -----------------------------------------------------------------------------
 # Metrics Server (para HPA)
 # -----------------------------------------------------------------------------
+# DISABLED for Free Tier: Causes context deadline exceeded on t3.micro
+# Metrics Server only needed for HPA (Horizontal Pod Autoscaler)
+# Free Tier clusters don't have resources for autoscaling
 
 resource "helm_release" "metrics_server" {
+  count = var.enable_metrics_server ? 1 : 0
+
   name       = "metrics-server"
   repository = "https://kubernetes-sigs.github.io/metrics-server/"
   chart      = "metrics-server"
