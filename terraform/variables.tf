@@ -99,7 +99,7 @@ variable "signoz_storage_size" {
 variable "enable_aws_lb_controller" {
   description = "Habilitar AWS Load Balancer Controller"
   type        = bool
-  default     = false  # Disabled for Free Tier (too resource-intensive for t3.micro)
+  default     = false # Disabled for Free Tier (too resource-intensive for t3.micro)
 }
 
 variable "aws_lb_controller_version" {
