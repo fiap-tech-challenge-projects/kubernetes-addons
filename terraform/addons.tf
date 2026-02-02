@@ -129,6 +129,107 @@ resource "helm_release" "metrics_server" {
 }
 
 # -----------------------------------------------------------------------------
+# External Secrets Operator (REQUIRED per PHASE-3 plan)
+# -----------------------------------------------------------------------------
+# Syncs secrets from AWS Secrets Manager to Kubernetes Secrets
+# Required by k8s-main-service for DATABASE_URL, JWT_SECRET, etc.
+
+resource "helm_release" "external_secrets" {
+  count = var.enable_external_secrets ? 1 : 0
+
+  name       = "external-secrets"
+  repository = "https://charts.external-secrets.io"
+  chart      = "external-secrets"
+  version    = var.external_secrets_version
+  namespace  = "external-secrets-system"
+  create_namespace = true
+
+  timeout = 900 # 15 minutes (increased from 10min due to CRD installation)
+  wait    = true
+  wait_for_jobs = true
+
+  # Install CRDs (SecretStore, ExternalSecret, etc.)
+  set {
+    name  = "installCRDs"
+    value = "true"
+  }
+
+  # Controller resources (main operator)
+  set {
+    name  = "resources.requests.cpu"
+    value = "100m"
+  }
+
+  set {
+    name  = "resources.requests.memory"
+    value = "256Mi"
+  }
+
+  set {
+    name  = "resources.limits.cpu"
+    value = "500m"
+  }
+
+  set {
+    name  = "resources.limits.memory"
+    value = "512Mi"
+  }
+
+  # Webhook resources (validates ExternalSecret CRDs)
+  set {
+    name  = "webhook.resources.requests.cpu"
+    value = "50m"
+  }
+
+  set {
+    name  = "webhook.resources.requests.memory"
+    value = "128Mi"
+  }
+
+  set {
+    name  = "webhook.resources.limits.cpu"
+    value = "200m"
+  }
+
+  set {
+    name  = "webhook.resources.limits.memory"
+    value = "256Mi"
+  }
+
+  # Cert controller resources (manages webhook certificates)
+  set {
+    name  = "certController.resources.requests.cpu"
+    value = "50m"
+  }
+
+  set {
+    name  = "certController.resources.requests.memory"
+    value = "128Mi"
+  }
+
+  set {
+    name  = "certController.resources.limits.cpu"
+    value = "200m"
+  }
+
+  set {
+    name  = "certController.resources.limits.memory"
+    value = "256Mi"
+  }
+
+  # Service account for IRSA (IAM Roles for Service Accounts)
+  set {
+    name  = "serviceAccount.create"
+    value = "true"
+  }
+
+  set {
+    name  = "serviceAccount.name"
+    value = "external-secrets"
+  }
+}
+
+# -----------------------------------------------------------------------------
 # SigNoz Namespace
 # -----------------------------------------------------------------------------
 

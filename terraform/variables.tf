@@ -118,3 +118,19 @@ variable "enable_metrics_server" {
   default     = true # Required for HPA autoscaling
 }
 
+# -----------------------------------------------------------------------------
+# External Secrets Operator (REQUIRED per PHASE-3 plan line 679)
+# -----------------------------------------------------------------------------
+
+variable "enable_external_secrets" {
+  description = "Habilitar External Secrets Operator (necessario para k8s-main-service secrets)"
+  type        = bool
+  default     = true # REQUIRED - k8s-main-service depends on this
+}
+
+variable "external_secrets_version" {
+  description = "Versao do External Secrets Operator"
+  type        = string
+  default     = "0.10.4" # Latest stable version (was 0.9.11)
+}
+
