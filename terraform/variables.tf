@@ -107,3 +107,29 @@ variable "aws_lb_controller_version" {
   type        = string
   default     = "1.6.2"
 }
+
+# -----------------------------------------------------------------------------
+# Metrics Server
+# -----------------------------------------------------------------------------
+
+variable "enable_metrics_server" {
+  description = "Habilitar Metrics Server (necessario para HPA)"
+  type        = bool
+  default     = false # Disabled for Free Tier (context deadline exceeded on t3.micro)
+}
+
+# -----------------------------------------------------------------------------
+# External Secrets Operator
+# -----------------------------------------------------------------------------
+
+variable "enable_external_secrets" {
+  description = "Habilitar External Secrets Operator (necessario para sincronizar secrets do AWS Secrets Manager)"
+  type        = bool
+  default     = true # Required for application secrets
+}
+
+variable "external_secrets_version" {
+  description = "Versao do External Secrets Operator"
+  type        = string
+  default     = "0.9.11"
+}

@@ -86,17 +86,129 @@ resource "helm_release" "aws_lb_controller" {
 # -----------------------------------------------------------------------------
 # Metrics Server (para HPA)
 # -----------------------------------------------------------------------------
+# DISABLED for Free Tier: Causes context deadline exceeded on t3.micro
+# Metrics Server only needed for HPA (Horizontal Pod Autoscaler)
+# Free Tier clusters don't have resources for autoscaling
 
 resource "helm_release" "metrics_server" {
+  count = var.enable_metrics_server ? 1 : 0
+
   name       = "metrics-server"
   repository = "https://kubernetes-sigs.github.io/metrics-server/"
   chart      = "metrics-server"
   version    = "3.11.0"
   namespace  = "kube-system"
 
+  timeout = 600 # 10 minutes for Free Tier t3.micro
+
   set {
     name  = "args[0]"
     value = "--kubelet-insecure-tls"
+  }
+
+  # FREE TIER: Reduce resource requests for t3.micro (1GB RAM)
+  set {
+    name  = "resources.requests.cpu"
+    value = "50m"
+  }
+
+  set {
+    name  = "resources.requests.memory"
+    value = "64Mi"
+  }
+
+  set {
+    name  = "resources.limits.cpu"
+    value = "100m"
+  }
+
+  set {
+    name  = "resources.limits.memory"
+    value = "128Mi"
+  }
+}
+
+# -----------------------------------------------------------------------------
+# External Secrets Operator (para AWS Secrets Manager)
+# -----------------------------------------------------------------------------
+
+resource "helm_release" "external_secrets" {
+  count = var.enable_external_secrets ? 1 : 0
+
+  name       = "external-secrets"
+  repository = "https://charts.external-secrets.io"
+  chart      = "external-secrets"
+  version    = var.external_secrets_version
+  namespace  = "kube-system"
+
+  timeout = 600 # 10 minutes
+
+  set {
+    name  = "installCRDs"
+    value = "true"
+  }
+
+  # Reduce resources for cost optimization
+  set {
+    name  = "resources.requests.cpu"
+    value = "50m"
+  }
+
+  set {
+    name  = "resources.requests.memory"
+    value = "128Mi"
+  }
+
+  set {
+    name  = "resources.limits.cpu"
+    value = "200m"
+  }
+
+  set {
+    name  = "resources.limits.memory"
+    value = "256Mi"
+  }
+
+  # Webhook resources
+  set {
+    name  = "webhook.resources.requests.cpu"
+    value = "50m"
+  }
+
+  set {
+    name  = "webhook.resources.requests.memory"
+    value = "128Mi"
+  }
+
+  set {
+    name  = "webhook.resources.limits.cpu"
+    value = "100m"
+  }
+
+  set {
+    name  = "webhook.resources.limits.memory"
+    value = "256Mi"
+  }
+
+  # Cert controller resources
+  set {
+    name  = "certController.resources.requests.cpu"
+    value = "50m"
+  }
+
+  set {
+    name  = "certController.resources.requests.memory"
+    value = "128Mi"
+  }
+
+  set {
+    name  = "certController.resources.limits.cpu"
+    value = "100m"
+  }
+
+  set {
+    name  = "certController.resources.limits.memory"
+    value = "256Mi"
   }
 }
 
