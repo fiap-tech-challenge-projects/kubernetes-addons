@@ -71,7 +71,7 @@ variable "app_namespace" {
 variable "enable_signoz" {
   description = "Habilitar instalacao do SigNoz para observabilidade"
   type        = bool
-  default     = false # Disabled by default for faster deployment
+  default     = true # Required for Phase 3 observability
 }
 
 variable "signoz_namespace" {
@@ -99,7 +99,7 @@ variable "signoz_storage_size" {
 variable "enable_aws_lb_controller" {
   description = "Habilitar AWS Load Balancer Controller"
   type        = bool
-  default     = false # Disabled for Free Tier (too resource-intensive for t3.micro)
+  default     = true # Required for Ingress (Phase 3 plan section 3.3)
 }
 
 variable "aws_lb_controller_version" {
@@ -115,21 +115,6 @@ variable "aws_lb_controller_version" {
 variable "enable_metrics_server" {
   description = "Habilitar Metrics Server (necessario para HPA)"
   type        = bool
-  default     = false # Disabled for Free Tier (context deadline exceeded on t3.micro)
+  default     = true # Required for HPA autoscaling
 }
 
-# -----------------------------------------------------------------------------
-# External Secrets Operator
-# -----------------------------------------------------------------------------
-
-variable "enable_external_secrets" {
-  description = "Habilitar External Secrets Operator (necessario para sincronizar secrets do AWS Secrets Manager)"
-  type        = bool
-  default     = false # Disabled by default - enable when needed for k8s-main-service
-}
-
-variable "external_secrets_version" {
-  description = "Versao do External Secrets Operator"
-  type        = string
-  default     = "0.9.11"
-}
