@@ -141,7 +141,7 @@ resource "helm_release" "external_secrets" {
   version    = var.external_secrets_version
   namespace  = "kube-system"
 
-  timeout = 600 # 10 minutes
+  timeout = 1200 # 20 minutes (AWS Academy can be slow)
 
   set {
     name  = "installCRDs"
