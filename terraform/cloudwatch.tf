@@ -21,8 +21,9 @@ resource "aws_cloudwatch_dashboard" "service_orders" {
         type = "metric"
         properties = {
           metrics = [
-            ["ContainerInsights", "pod_cpu_utilization", { stat = "Average" }]
+            ["ContainerInsights", "pod_cpu_utilization"]
           ]
+          stat    = "Average"
           view    = "timeSeries"
           stacked = false
           region  = var.aws_region
@@ -41,11 +42,9 @@ resource "aws_cloudwatch_dashboard" "service_orders" {
         type = "metric"
         properties = {
           metrics = [
-            ["AWS/ApplicationELB", "TargetResponseTime", {
-              stat  = "Average"
-              label = "Diagnóstico"
-            }]
+            ["AWS/ApplicationELB", "TargetResponseTime", { label = "Diagnóstico" }]
           ]
+          stat    = "Average"
           view    = "timeSeries"
           stacked = false
           region  = var.aws_region
@@ -64,11 +63,9 @@ resource "aws_cloudwatch_dashboard" "service_orders" {
         type = "metric"
         properties = {
           metrics = [
-            ["AWS/ApplicationELB", "TargetResponseTime", {
-              stat  = "Average"
-              label = "Execução"
-            }]
+            ["AWS/ApplicationELB", "TargetResponseTime", { label = "Execução" }]
           ]
+          stat    = "Average"
           view    = "timeSeries"
           stacked = false
           region  = var.aws_region
@@ -87,11 +84,9 @@ resource "aws_cloudwatch_dashboard" "service_orders" {
         type = "metric"
         properties = {
           metrics = [
-            ["AWS/ApplicationELB", "TargetResponseTime", {
-              stat  = "p99"
-              label = "Finalização"
-            }]
+            ["AWS/ApplicationELB", "TargetResponseTime", { label = "Finalização" }]
           ]
+          stat    = "p99"
           view    = "timeSeries"
           stacked = false
           region  = var.aws_region
@@ -138,12 +133,9 @@ resource "aws_cloudwatch_dashboard" "application_performance" {
         type = "metric"
         properties = {
           metrics = [
-            ["AWS/ApplicationELB", "TargetResponseTime", {
-              stat  = "p50"
-              label = "P50 Latência"
-            }],
-            ["...", { stat = "p95", label = "P95 Latência" }],
-            ["...", { stat = "p99", label = "P99 Latência" }]
+            ["AWS/ApplicationELB", "TargetResponseTime", { label = "P50 Latência", stat = "p50" }],
+            ["...", { label = "P95 Latência", stat = "p95" }],
+            ["...", { label = "P99 Latência", stat = "p99" }]
           ]
           view    = "timeSeries"
           stacked = false
@@ -164,15 +156,10 @@ resource "aws_cloudwatch_dashboard" "application_performance" {
         type = "metric"
         properties = {
           metrics = [
-            ["AWS/ApplicationELB", "HTTPCode_Target_4XX_Count", {
-              stat  = "Sum"
-              label = "4xx Errors"
-            }],
-            [".", "HTTPCode_Target_5XX_Count", {
-              stat  = "Sum"
-              label = "5xx Errors"
-            }]
+            ["AWS/ApplicationELB", "HTTPCode_Target_4XX_Count", { label = "4xx Errors" }],
+            [".", "HTTPCode_Target_5XX_Count", { label = "5xx Errors" }]
           ]
+          stat    = "Sum"
           view    = "timeSeries"
           stacked = true
           region  = var.aws_region
@@ -191,10 +178,9 @@ resource "aws_cloudwatch_dashboard" "application_performance" {
         type = "metric"
         properties = {
           metrics = [
-            ["AWS/ApplicationELB", "RequestCount", {
-              stat = "Sum"
-            }]
+            ["AWS/ApplicationELB", "RequestCount"]
           ]
+          stat    = "Sum"
           view    = "timeSeries"
           stacked = false
           region  = var.aws_region
@@ -244,9 +230,9 @@ resource "aws_cloudwatch_dashboard" "infrastructure" {
           metrics = [
             ["ContainerInsights", "cluster_node_cpu_utilization", {
               ClusterName = local.cluster_name
-              stat        = "Average"
             }]
           ]
+          stat    = "Average"
           view    = "timeSeries"
           stacked = false
           region  = var.aws_region
@@ -268,9 +254,9 @@ resource "aws_cloudwatch_dashboard" "infrastructure" {
           metrics = [
             ["ContainerInsights", "cluster_node_memory_utilization", {
               ClusterName = local.cluster_name
-              stat        = "Average"
             }]
           ]
+          stat    = "Average"
           view    = "timeSeries"
           stacked = false
           region  = var.aws_region
@@ -292,9 +278,9 @@ resource "aws_cloudwatch_dashboard" "infrastructure" {
           metrics = [
             ["ContainerInsights", "cluster_number_of_running_pods", {
               ClusterName = local.cluster_name
-              stat        = "Average"
             }]
           ]
+          stat    = "Average"
           view    = "timeSeries"
           stacked = false
           region  = var.aws_region
@@ -315,9 +301,9 @@ resource "aws_cloudwatch_dashboard" "infrastructure" {
           metrics = [
             ["ContainerInsights", "cluster_number_of_nodes", {
               ClusterName = local.cluster_name
-              stat        = "Average"
             }]
           ]
+          stat    = "Average"
           view    = "timeSeries"
           stacked = false
           region  = var.aws_region
@@ -339,10 +325,12 @@ resource "aws_cloudwatch_dashboard" "infrastructure" {
             ["ContainerInsights", "pod_cpu_utilization", {
               ClusterName = local.cluster_name
               Namespace   = "${var.app_namespace}-staging"
-              stat        = "Average"
             }],
-            ["...", { Namespace = "${var.app_namespace}-production" }]
+            ["...", {
+              Namespace = "${var.app_namespace}-production"
+            }]
           ]
+          stat    = "Average"
           view    = "timeSeries"
           stacked = false
           region  = var.aws_region
@@ -364,10 +352,12 @@ resource "aws_cloudwatch_dashboard" "infrastructure" {
             ["ContainerInsights", "pod_memory_utilization", {
               ClusterName = local.cluster_name
               Namespace   = "${var.app_namespace}-staging"
-              stat        = "Average"
             }],
-            ["...", { Namespace = "${var.app_namespace}-production" }]
+            ["...", {
+              Namespace = "${var.app_namespace}-production"
+            }]
           ]
+          stat    = "Average"
           view    = "timeSeries"
           stacked = false
           region  = var.aws_region
