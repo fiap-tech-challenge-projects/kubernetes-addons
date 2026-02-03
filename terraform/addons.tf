@@ -103,7 +103,7 @@ resource "helm_release" "aws_lb_controller" {
     value = "1"
   }
 
-  # Resource requests for controller pods - BALANCED for t3.medium
+  # Resource requests for controller pods - BALANCED for t3.small
   set {
     name  = "resources.requests.cpu"
     value = "100m" # Sufficient for AWS API calls
@@ -172,7 +172,7 @@ resource "helm_release" "metrics_server" {
     value = "--kubelet-insecure-tls"
   }
 
-  # Optimized resource requests for t3.medium cluster
+  # Optimized resource requests for t3.small cluster
   set {
     name  = "resources.requests.cpu"
     value = "50m"
@@ -234,7 +234,7 @@ resource "helm_release" "external_secrets" {
     value = "1"
   }
 
-  # Controller resources (main operator) - BALANCED for t3.medium
+  # Controller resources (main operator) - BALANCED for t3.small
   set {
     name  = "resources.requests.cpu"
     value = "100m" # Sufficient for secret synchronization
