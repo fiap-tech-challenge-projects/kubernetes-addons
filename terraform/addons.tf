@@ -1,8 +1,9 @@
 # =============================================================================
 # Kubernetes Addons (Phase 2)
 # =============================================================================
-# Configura addons adicionais: Namespaces, AWS Load Balancer Controller, SigNoz
+# Configura addons adicionais: Namespaces, AWS Load Balancer Controller, External Secrets
 # Este arquivo e aplicado APOS a criacao do cluster EKS (Phase 1)
+# Observability: CloudWatch Container Insights (nativo AWS)
 # =============================================================================
 
 # -----------------------------------------------------------------------------
@@ -102,7 +103,7 @@ resource "helm_release" "aws_lb_controller" {
     value = "1"
   }
 
-  # Resource requests for controller pods - BALANCED for t3.large
+  # Resource requests for controller pods - BALANCED for t3.medium
   set {
     name  = "resources.requests.cpu"
     value = "100m" # Sufficient for AWS API calls
@@ -149,9 +150,7 @@ resource "time_sleep" "wait_for_lb_controller" {
 # -----------------------------------------------------------------------------
 # Metrics Server (para HPA)
 # -----------------------------------------------------------------------------
-# DISABLED for Free Tier: Causes context deadline exceeded on t3.micro
-# Metrics Server only needed for HPA (Horizontal Pod Autoscaler)
-# Free Tier clusters don't have resources for autoscaling
+# Required for Horizontal Pod Autoscaler and kubectl top commands
 
 resource "helm_release" "metrics_server" {
   count = var.enable_metrics_server ? 1 : 0
@@ -162,7 +161,7 @@ resource "helm_release" "metrics_server" {
   version    = "3.11.0"
   namespace  = "kube-system"
 
-  timeout         = 600 # 10 minutes for Free Tier t3.micro
+  timeout         = 600 # 10 minutes
   wait            = true
   wait_for_jobs   = true
   atomic          = false # Prevent rollback loops on timeout
@@ -173,7 +172,7 @@ resource "helm_release" "metrics_server" {
     value = "--kubelet-insecure-tls"
   }
 
-  # FREE TIER: Reduce resource requests for t3.micro (1GB RAM)
+  # Optimized resource requests for t3.medium cluster
   set {
     name  = "resources.requests.cpu"
     value = "50m"
@@ -235,7 +234,7 @@ resource "helm_release" "external_secrets" {
     value = "1"
   }
 
-  # Controller resources (main operator) - BALANCED for t3.large
+  # Controller resources (main operator) - BALANCED for t3.medium
   set {
     name  = "resources.requests.cpu"
     value = "100m" # Sufficient for secret synchronization
@@ -331,134 +330,6 @@ resource "time_sleep" "wait_for_external_secrets" {
   ]
 }
 
-# -----------------------------------------------------------------------------
-# SigNoz Namespace
-# -----------------------------------------------------------------------------
-
-resource "kubernetes_namespace" "signoz" {
-  count = var.enable_signoz ? 1 : 0
-
-  metadata {
-    name = var.signoz_namespace
-
-    labels = {
-      name       = var.signoz_namespace
-      purpose    = "observability"
-      managed-by = "terraform"
-    }
-  }
-}
-
-# -----------------------------------------------------------------------------
-# SigNoz via Helm
-# -----------------------------------------------------------------------------
-
-resource "helm_release" "signoz" {
-  count = var.enable_signoz ? 1 : 0
-
-  name       = "signoz"
-  repository = "https://charts.signoz.io"
-  chart      = "signoz"
-  version    = var.signoz_chart_version
-  namespace  = var.signoz_namespace
-
-  # CRITICAL: SigNoz is heavy - needs extended timeout
-  timeout         = 1200 # 20 minutes (ClickHouse StatefulSets are slow)
-  wait            = true
-  wait_for_jobs   = true
-  atomic          = false # Prevent rollback loops on timeout
-  cleanup_on_fail = false # Keep resources for debugging
-
-  # Must wait for all previous stages (webhooks must be ready)
-  depends_on = [
-    kubernetes_namespace.signoz,
-    helm_release.aws_lb_controller,
-    time_sleep.wait_for_lb_controller,
-    helm_release.external_secrets,
-    time_sleep.wait_for_external_secrets,
-    kubernetes_storage_class.gp3
-  ]
-
-  # Production configuration with adequate resources
-  values = [
-    yamlencode({
-      # ClickHouse configuration - BALANCED for t3.large staging
-      clickhouse = {
-        persistence = {
-          enabled = true
-          size    = var.signoz_storage_size
-        }
-        resources = {
-          requests = {
-            cpu    = "500m" # Staging: 0.5 CPU (reduced from 1000m)
-            memory = "1Gi"  # Staging: 1GB (reduced from 4Gi)
-          }
-          limits = {
-            cpu    = "1000m" # Staging: up to 1 CPU (reduced from 2000m)
-            memory = "2Gi"   # Staging: up to 2GB (reduced from 8Gi)
-          }
-        }
-      }
-
-      # Query Service - BALANCED for t3.large staging
-      queryService = {
-        resources = {
-          requests = {
-            cpu    = "200m"  # Staging: 0.2 CPU (reduced from 500m)
-            memory = "256Mi" # Staging: 256MB (reduced from 1Gi)
-          }
-          limits = {
-            cpu    = "500m"  # Staging: up to 0.5 CPU (reduced from 1000m)
-            memory = "512Mi" # Staging: up to 512MB (reduced from 2Gi)
-          }
-        }
-      }
-
-      # Frontend - BALANCED for t3.large staging
-      frontend = {
-        resources = {
-          requests = {
-            cpu    = "100m"  # Staging: 0.1 CPU (reduced from 200m)
-            memory = "128Mi" # Staging: 128MB (reduced from 512Mi)
-          }
-          limits = {
-            cpu    = "200m"  # Staging: up to 0.2 CPU (reduced from 500m)
-            memory = "256Mi" # Staging: up to 256MB (reduced from 1Gi)
-          }
-        }
-      }
-
-      # OTel Collector - BALANCED for t3.large staging
-      otelCollector = {
-        resources = {
-          requests = {
-            cpu    = "200m"  # Staging: 0.2 CPU (reduced from 500m)
-            memory = "256Mi" # Staging: 256MB (reduced from 1Gi)
-          }
-          limits = {
-            cpu    = "500m"  # Staging: up to 0.5 CPU (reduced from 1000m)
-            memory = "512Mi" # Staging: up to 512MB (reduced from 2Gi)
-          }
-        }
-      }
-
-      # Alertmanager - BALANCED for t3.large staging
-      alertmanager = {
-        enabled = true
-        resources = {
-          requests = {
-            cpu    = "50m"  # Staging: 0.05 CPU (reduced from 100m)
-            memory = "64Mi" # Staging: 64MB (reduced from 256Mi)
-          }
-          limits = {
-            cpu    = "100m"  # Staging: up to 0.1 CPU (reduced from 200m)
-            memory = "128Mi" # Staging: up to 128MB (reduced from 512Mi)
-          }
-        }
-      }
-    })
-  ]
-}
 
 # -----------------------------------------------------------------------------
 # StorageClass para GP3 (performance melhor que GP2)

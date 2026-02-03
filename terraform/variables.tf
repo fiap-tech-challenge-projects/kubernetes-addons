@@ -65,34 +65,6 @@ variable "app_namespace" {
 }
 
 # -----------------------------------------------------------------------------
-# SigNoz Configuration
-# -----------------------------------------------------------------------------
-
-variable "enable_signoz" {
-  description = "Habilitar instalacao do SigNoz para observabilidade"
-  type        = bool
-  default     = true # ENABLED: t3.large has sufficient RAM (~7GB available)
-}
-
-variable "signoz_namespace" {
-  description = "Namespace para o SigNoz"
-  type        = string
-  default     = "signoz"
-}
-
-variable "signoz_chart_version" {
-  description = "Versao do Helm chart do SigNoz"
-  type        = string
-  default     = "0.32.0"
-}
-
-variable "signoz_storage_size" {
-  description = "Tamanho do storage para ClickHouse do SigNoz"
-  type        = string
-  default     = "20Gi"
-}
-
-# -----------------------------------------------------------------------------
 # AWS Load Balancer Controller
 # -----------------------------------------------------------------------------
 
@@ -132,5 +104,15 @@ variable "external_secrets_version" {
   description = "Versao do External Secrets Operator"
   type        = string
   default     = "0.10.4" # Latest stable version (was 0.9.11)
+}
+
+# -----------------------------------------------------------------------------
+# CloudWatch Observability Variables
+# -----------------------------------------------------------------------------
+
+variable "alarm_email" {
+  description = "Email para receber alertas do CloudWatch (deixe vazio para desabilitar)"
+  type        = string
+  default     = "" # Set via terraform.tfvars or TF_VAR_alarm_email
 }
 
