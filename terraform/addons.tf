@@ -137,15 +137,15 @@ resource "helm_release" "metrics_server" {
 resource "helm_release" "external_secrets" {
   count = var.enable_external_secrets ? 1 : 0
 
-  name       = "external-secrets"
-  repository = "https://charts.external-secrets.io"
-  chart      = "external-secrets"
-  version    = var.external_secrets_version
-  namespace  = "external-secrets-system"
+  name             = "external-secrets"
+  repository       = "https://charts.external-secrets.io"
+  chart            = "external-secrets"
+  version          = var.external_secrets_version
+  namespace        = "external-secrets-system"
   create_namespace = true
 
-  timeout = 900 # 15 minutes (increased from 10min due to CRD installation)
-  wait    = true
+  timeout       = 900 # 15 minutes (increased from 10min due to CRD installation)
+  wait          = true
   wait_for_jobs = true
 
   # Install CRDs (SecretStore, ExternalSecret, etc.)
