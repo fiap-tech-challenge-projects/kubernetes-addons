@@ -50,6 +50,19 @@ resource "helm_release" "aws_lb_controller" {
   version    = var.aws_lb_controller_version
   namespace  = "kube-system"
 
+  # CRITICAL: Extended timeouts for webhook initialization
+  timeout         = 900 # 15 minutes (increased from default 300s)
+  wait            = true
+  wait_for_jobs   = true
+  atomic          = false # Prevent rollback loops on timeout
+  cleanup_on_fail = false # Keep resources for debugging
+
+  # Force dependency on namespaces to ensure they exist first
+  depends_on = [
+    kubernetes_namespace.staging,
+    kubernetes_namespace.production
+  ]
+
   set {
     name  = "clusterName"
     value = local.cluster_name
@@ -81,6 +94,39 @@ resource "helm_release" "aws_lb_controller" {
     name  = "vpcId"
     value = local.vpc_id
   }
+
+  # Resource requests for controller pods
+  set {
+    name  = "resources.requests.cpu"
+    value = "100m"
+  }
+
+  set {
+    name  = "resources.requests.memory"
+    value = "256Mi"
+  }
+
+  # Enable logging for troubleshooting
+  set {
+    name  = "logLevel"
+    value = "info"
+  }
+}
+
+# -----------------------------------------------------------------------------
+# Wait for AWS LB Controller Webhook to be Ready
+# -----------------------------------------------------------------------------
+# CRITICAL: AWS Load Balancer Controller webhook takes time to initialize
+# This prevents "no endpoints available for service" errors
+
+resource "time_sleep" "wait_for_lb_controller" {
+  count = var.enable_aws_lb_controller ? 1 : 0
+
+  create_duration = "90s" # Wait 90 seconds for webhook pods to be fully ready
+
+  depends_on = [
+    helm_release.aws_lb_controller
+  ]
 }
 
 # -----------------------------------------------------------------------------
@@ -99,7 +145,11 @@ resource "helm_release" "metrics_server" {
   version    = "3.11.0"
   namespace  = "kube-system"
 
-  timeout = 600 # 10 minutes for Free Tier t3.micro
+  timeout         = 600 # 10 minutes for Free Tier t3.micro
+  wait            = true
+  wait_for_jobs   = true
+  atomic          = false # Prevent rollback loops on timeout
+  cleanup_on_fail = false # Keep resources for debugging
 
   set {
     name  = "args[0]"
@@ -144,9 +194,17 @@ resource "helm_release" "external_secrets" {
   namespace        = "external-secrets-system"
   create_namespace = true
 
-  timeout       = 900 # 15 minutes (increased from 10min due to CRD installation)
-  wait          = true
-  wait_for_jobs = true
+  timeout         = 900 # 15 minutes (increased from 10min due to CRD installation)
+  wait            = true
+  wait_for_jobs   = true
+  atomic          = false # Prevent rollback loops on timeout
+  cleanup_on_fail = false # Keep resources for debugging
+
+  # CRITICAL: Must wait for AWS LB Controller webhook to be fully ready
+  depends_on = [
+    helm_release.aws_lb_controller,
+    time_sleep.wait_for_lb_controller
+  ]
 
   # Install CRDs (SecretStore, ExternalSecret, etc.)
   set {
@@ -230,6 +288,21 @@ resource "helm_release" "external_secrets" {
 }
 
 # -----------------------------------------------------------------------------
+# Wait for External Secrets Webhook to be Ready
+# -----------------------------------------------------------------------------
+# External Secrets also has webhook validations that need to be ready
+
+resource "time_sleep" "wait_for_external_secrets" {
+  count = var.enable_external_secrets ? 1 : 0
+
+  create_duration = "60s" # Wait 60 seconds for webhook pods to be fully ready
+
+  depends_on = [
+    helm_release.external_secrets
+  ]
+}
+
+# -----------------------------------------------------------------------------
 # SigNoz Namespace
 # -----------------------------------------------------------------------------
 
@@ -259,6 +332,23 @@ resource "helm_release" "signoz" {
   chart      = "signoz"
   version    = var.signoz_chart_version
   namespace  = var.signoz_namespace
+
+  # CRITICAL: SigNoz is heavy - needs extended timeout
+  timeout         = 1200 # 20 minutes (ClickHouse StatefulSets are slow)
+  wait            = true
+  wait_for_jobs   = true
+  atomic          = false # Prevent rollback loops on timeout
+  cleanup_on_fail = false # Keep resources for debugging
+
+  # Must wait for all previous stages (webhooks must be ready)
+  depends_on = [
+    kubernetes_namespace.signoz,
+    helm_release.aws_lb_controller,
+    time_sleep.wait_for_lb_controller,
+    helm_release.external_secrets,
+    time_sleep.wait_for_external_secrets,
+    kubernetes_storage_class.gp3
+  ]
 
   # Production configuration with adequate resources
   values = [
@@ -345,10 +435,6 @@ resource "helm_release" "signoz" {
       }
       # AWS ACADEMY: Use cpu="50m", memory="64Mi" (requests) and cpu="100m", memory="128Mi" (limits)
     })
-  ]
-
-  depends_on = [
-    kubernetes_namespace.signoz,
   ]
 }
 
