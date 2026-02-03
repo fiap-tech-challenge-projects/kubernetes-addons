@@ -50,12 +50,12 @@ output "aws_lb_controller_status" {
 
 output "external_secrets_status" {
   description = "Status do External Secrets Operator"
-  value       = var.enable_external_secrets ? "Instalado" : "Desabilitado"
+  value       = var.enable_external_secrets ? "Instalado (v${var.external_secrets_version})" : "Desabilitado"
 }
 
-output "external_secrets_version" {
-  description = "Versao do External Secrets Operator"
-  value       = var.enable_external_secrets ? var.external_secrets_version : null
+output "external_secrets_namespace" {
+  description = "Namespace do External Secrets Operator"
+  value       = var.enable_external_secrets ? "external-secrets-system" : null
 }
 
 # -----------------------------------------------------------------------------
