@@ -102,15 +102,25 @@ resource "helm_release" "aws_lb_controller" {
     value = "1"
   }
 
-  # Resource requests for controller pods
+  # Resource requests for controller pods - MINIMIZED for t3.medium
   set {
     name  = "resources.requests.cpu"
-    value = "100m"
+    value = "25m" # Reduced from 100m
   }
 
   set {
     name  = "resources.requests.memory"
-    value = "256Mi"
+    value = "64Mi" # Reduced from 256Mi
+  }
+
+  set {
+    name  = "resources.limits.cpu"
+    value = "100m"
+  }
+
+  set {
+    name  = "resources.limits.memory"
+    value = "128Mi"
   }
 
   # Enable logging for troubleshooting
@@ -225,25 +235,25 @@ resource "helm_release" "external_secrets" {
     value = "1"
   }
 
-  # Controller resources (main operator)
+  # Controller resources (main operator) - MINIMIZED for t3.medium
   set {
     name  = "resources.requests.cpu"
-    value = "100m"
+    value = "25m" # Reduced from 100m
   }
 
   set {
     name  = "resources.requests.memory"
-    value = "256Mi"
+    value = "64Mi" # Reduced from 256Mi
   }
 
   set {
     name  = "resources.limits.cpu"
-    value = "500m"
+    value = "100m" # Reduced from 500m
   }
 
   set {
     name  = "resources.limits.memory"
-    value = "512Mi"
+    value = "128Mi" # Reduced from 512Mi
   }
 
   # Reduce webhook replicas
@@ -252,46 +262,46 @@ resource "helm_release" "external_secrets" {
     value = "1"
   }
 
-  # Webhook resources (validates ExternalSecret CRDs)
+  # Webhook resources (validates ExternalSecret CRDs) - MINIMIZED
   set {
     name  = "webhook.resources.requests.cpu"
-    value = "50m"
+    value = "10m" # Reduced from 50m
   }
 
   set {
     name  = "webhook.resources.requests.memory"
-    value = "128Mi"
+    value = "32Mi" # Reduced from 128Mi
   }
 
   set {
     name  = "webhook.resources.limits.cpu"
-    value = "200m"
+    value = "50m" # Reduced from 200m
   }
 
   set {
     name  = "webhook.resources.limits.memory"
-    value = "256Mi"
+    value = "64Mi" # Reduced from 256Mi
   }
 
-  # Cert controller resources (manages webhook certificates)
+  # Cert controller resources (manages webhook certificates) - MINIMIZED
   set {
     name  = "certController.resources.requests.cpu"
-    value = "50m"
+    value = "10m" # Reduced from 50m
   }
 
   set {
     name  = "certController.resources.requests.memory"
-    value = "128Mi"
+    value = "32Mi" # Reduced from 128Mi
   }
 
   set {
     name  = "certController.resources.limits.cpu"
-    value = "200m"
+    value = "50m" # Reduced from 200m
   }
 
   set {
     name  = "certController.resources.limits.memory"
-    value = "256Mi"
+    value = "64Mi" # Reduced from 256Mi
   }
 
   # Service account for IRSA (IAM Roles for Service Accounts)
