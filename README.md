@@ -32,12 +32,16 @@ terraform plan
 ### Namespaces
 - `ftc-app-staging` - Staging application environment
 - `ftc-app-production` - Production application environment
-- `signoz` - Observability stack (if enabled)
 
 ### Helm Releases
 - **AWS Load Balancer Controller** - ALB/NLB integration for Ingress
+- **External Secrets Operator** - AWS Secrets Manager integration
 - **Metrics Server** - Required for HPA (Horizontal Pod Autoscaler)
-- **SigNoz** - OpenTelemetry observability stack (optional)
+
+### Observability
+- **CloudWatch Container Insights** - Native AWS monitoring
+- **CloudWatch Logs** - Structured JSON logs
+- **CloudWatch Dashboards** - Metrics visualization
 
 ## Prerequisites
 
@@ -85,22 +89,8 @@ gh workflow run deploy-all.yml --field environment=staging
 | `environment` | Environment (staging/production) | `development` |
 | `app_namespace` | Base namespace name | `ftc-app` |
 | `enable_aws_lb_controller` | Install ALB Controller | `true` |
-| `enable_signoz` | Install SigNoz | `false` |
-| `signoz_storage_size` | ClickHouse storage | `20Gi` |
-
-### Enabling SigNoz
-
-SigNoz is **disabled by default** to reduce deployment time and resource usage. To enable:
-
-```hcl
-enable_signoz = true
-```
-
-**Note**: SigNoz requires:
-- 2 vCPU total across all pods
-- 2.5 GB RAM
-- 20 GB persistent storage
-- ~5-10 minutes to deploy
+| `enable_external_secrets` | Install External Secrets | `true` |
+| `enable_metrics_server` | Install Metrics Server | `true` |
 
 ## Outputs
 
@@ -109,7 +99,6 @@ After deployment, outputs include:
 ```bash
 terraform output staging_namespace      # ftc-app-staging
 terraform output production_namespace   # ftc-app-production
-terraform output signoz_otel_endpoint   # signoz-otel-collector.signoz.svc.cluster.local:4317
 ```
 
 ## Troubleshooting
@@ -163,7 +152,7 @@ kubectl describe nodes  # Check resource allocations
 │  ├─ Create Namespaces                   │
 │  ├─ Install AWS LB Controller           │
 │  ├─ Install Metrics Server              │
-│  └─ Install SigNoz (optional)           │
+│  └─ Install External Secrets Operator   │
 └─────────────────────────────────────────┘
 ```
 
@@ -180,8 +169,8 @@ kubectl describe nodes  # Check resource allocations
 
 - **AWS LB Controller**: ~2 minutes
 - **Metrics Server**: ~1 minute
-- **SigNoz** (if enabled): ~8 minutes
-- **Total**: 3-11 minutes (depending on SigNoz)
+- **External Secrets Operator**: ~2 minutes
+- **Total**: ~5 minutes
 
 ## Cost Impact
 
@@ -190,9 +179,9 @@ kubectl describe nodes  # Check resource allocations
 | Namespaces | $0 |
 | AWS LB Controller | $0 (only charges when ALB created) |
 | Metrics Server | $0 |
-| SigNoz (ClickHouse PV) | ~$2 (20GB EBS) |
+| External Secrets Operator | $0 |
 
-**Total**: ~$0-2/month
+**Total**: ~$0/month
 
 ## Related Modules
 
@@ -205,4 +194,4 @@ kubectl describe nodes  # Check resource allocations
 
 - [HashiCorp EKS Tutorial](https://developer.hashicorp.com/terraform/tutorials/kubernetes/eks) - Provider Split Pattern
 - [AWS Load Balancer Controller Docs](https://kubernetes-sigs.github.io/aws-load-balancer-controller/)
-- [SigNoz Helm Chart](https://github.com/SigNoz/charts)
+- [External Secrets Operator](https://external-secrets.io/)

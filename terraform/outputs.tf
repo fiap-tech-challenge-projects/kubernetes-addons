@@ -16,25 +16,6 @@ output "production_namespace" {
   value       = kubernetes_namespace.production.metadata[0].name
 }
 
-output "signoz_namespace" {
-  description = "Namespace do SigNoz"
-  value       = var.enable_signoz ? kubernetes_namespace.signoz[0].metadata[0].name : null
-}
-
-# -----------------------------------------------------------------------------
-# SigNoz Access
-# -----------------------------------------------------------------------------
-
-output "signoz_frontend_service" {
-  description = "Como acessar o SigNoz Frontend"
-  value       = var.enable_signoz ? "kubectl port-forward -n ${var.signoz_namespace} svc/signoz-frontend 3301:3301" : null
-}
-
-output "signoz_otel_endpoint" {
-  description = "Endpoint do OpenTelemetry Collector"
-  value       = var.enable_signoz ? "signoz-otel-collector.${var.signoz_namespace}.svc.cluster.local:4317" : null
-}
-
 # -----------------------------------------------------------------------------
 # AWS Load Balancer Controller
 # -----------------------------------------------------------------------------
@@ -59,6 +40,30 @@ output "external_secrets_namespace" {
 }
 
 # -----------------------------------------------------------------------------
+# CloudWatch Dashboards
+# -----------------------------------------------------------------------------
+
+output "cloudwatch_dashboard_service_orders" {
+  description = "URL do CloudWatch Dashboard para Service Orders"
+  value       = "https://console.aws.amazon.com/cloudwatch/home?region=${var.aws_region}#dashboards:name=${aws_cloudwatch_dashboard.service_orders.dashboard_name}"
+}
+
+output "cloudwatch_dashboard_performance" {
+  description = "URL do CloudWatch Dashboard para Application Performance"
+  value       = "https://console.aws.amazon.com/cloudwatch/home?region=${var.aws_region}#dashboards:name=${aws_cloudwatch_dashboard.application_performance.dashboard_name}"
+}
+
+output "cloudwatch_dashboard_infrastructure" {
+  description = "URL do CloudWatch Dashboard para Infrastructure"
+  value       = "https://console.aws.amazon.com/cloudwatch/home?region=${var.aws_region}#dashboards:name=${aws_cloudwatch_dashboard.infrastructure.dashboard_name}"
+}
+
+output "cloudwatch_alarms_sns_topic" {
+  description = "SNS Topic ARN para alertas CloudWatch"
+  value       = aws_sns_topic.cloudwatch_alarms.arn
+}
+
+# -----------------------------------------------------------------------------
 # Summary Output
 # -----------------------------------------------------------------------------
 
@@ -74,15 +79,31 @@ output "summary" {
     Namespaces Criados:
       - ${kubernetes_namespace.staging.metadata[0].name} (Staging)
       - ${kubernetes_namespace.production.metadata[0].name} (Production)
-      ${var.enable_signoz ? "- ${var.signoz_namespace} (Observability)" : ""}
 
     Addons Instalados:
       - AWS Load Balancer Controller: ${var.enable_aws_lb_controller ? "Instalado" : "Desabilitado"}
       - External Secrets Operator: ${var.enable_external_secrets ? "Instalado (v${var.external_secrets_version})" : "Desabilitado"}
       - Metrics Server: ${var.enable_metrics_server ? "Instalado" : "Desabilitado"}
-      - SigNoz: ${var.enable_signoz ? "Instalado" : "Desabilitado"}
 
-    ${var.enable_signoz ? "Acessar SigNoz:\n      kubectl port-forward -n ${var.signoz_namespace} svc/signoz-frontend 3301:3301\n      Abra: http://localhost:3301" : ""}
+    Observabilidade:
+      - CloudWatch Container Insights (nativo AWS)
+      - CloudWatch Logs para application logs (JSON via Pino)
+      - 3 Dashboards CloudWatch criados:
+        * Service Orders (volume, tempo médio por status)
+        * Application Performance (latência, erros)
+        * Infrastructure (CPU, memória, pods, nodes)
+      - 6 CloudWatch Alarms configurados:
+        * High Error Rate (5xx > 10)
+        * High Latency (P95 > 2s)
+        * High CPU (> 80%)
+        * High Memory (> 85%)
+        * Pod Crashes
+        * Service Order Failures
+
+    Dashboards URLs:
+      terraform output cloudwatch_dashboard_service_orders
+      terraform output cloudwatch_dashboard_performance
+      terraform output cloudwatch_dashboard_infrastructure
 
     Proximo passo:
       Deploy database-managed-infra e k8s-main-service
