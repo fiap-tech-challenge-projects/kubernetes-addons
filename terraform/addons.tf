@@ -102,25 +102,25 @@ resource "helm_release" "aws_lb_controller" {
     value = "1"
   }
 
-  # Resource requests for controller pods - MINIMIZED for t3.medium
+  # Resource requests for controller pods - BALANCED for t3.large
   set {
     name  = "resources.requests.cpu"
-    value = "25m" # Reduced from 100m
+    value = "100m" # Sufficient for AWS API calls
   }
 
   set {
     name  = "resources.requests.memory"
-    value = "64Mi" # Reduced from 256Mi
+    value = "128Mi" # Balanced for webhook operations
   }
 
   set {
     name  = "resources.limits.cpu"
-    value = "100m"
+    value = "200m"
   }
 
   set {
     name  = "resources.limits.memory"
-    value = "128Mi"
+    value = "256Mi"
   }
 
   # Enable logging for troubleshooting
@@ -235,25 +235,25 @@ resource "helm_release" "external_secrets" {
     value = "1"
   }
 
-  # Controller resources (main operator) - MINIMIZED for t3.medium
+  # Controller resources (main operator) - BALANCED for t3.large
   set {
     name  = "resources.requests.cpu"
-    value = "25m" # Reduced from 100m
+    value = "100m" # Sufficient for secret synchronization
   }
 
   set {
     name  = "resources.requests.memory"
-    value = "64Mi" # Reduced from 256Mi
+    value = "128Mi" # Adequate for operator workload
   }
 
   set {
     name  = "resources.limits.cpu"
-    value = "100m" # Reduced from 500m
+    value = "200m"
   }
 
   set {
     name  = "resources.limits.memory"
-    value = "128Mi" # Reduced from 512Mi
+    value = "256Mi"
   }
 
   # Reduce webhook replicas
@@ -262,46 +262,46 @@ resource "helm_release" "external_secrets" {
     value = "1"
   }
 
-  # Webhook resources (validates ExternalSecret CRDs) - MINIMIZED
+  # Webhook resources (validates ExternalSecret CRDs) - BALANCED
   set {
     name  = "webhook.resources.requests.cpu"
-    value = "10m" # Reduced from 50m
+    value = "50m" # Adequate for validation webhooks
   }
 
   set {
     name  = "webhook.resources.requests.memory"
-    value = "32Mi" # Reduced from 128Mi
+    value = "64Mi" # Sufficient for webhook operations
   }
 
   set {
     name  = "webhook.resources.limits.cpu"
-    value = "50m" # Reduced from 200m
+    value = "100m"
   }
 
   set {
     name  = "webhook.resources.limits.memory"
-    value = "64Mi" # Reduced from 256Mi
+    value = "128Mi"
   }
 
-  # Cert controller resources (manages webhook certificates) - MINIMIZED
+  # Cert controller resources (manages webhook certificates) - BALANCED
   set {
     name  = "certController.resources.requests.cpu"
-    value = "10m" # Reduced from 50m
+    value = "50m" # Adequate for cert management
   }
 
   set {
     name  = "certController.resources.requests.memory"
-    value = "32Mi" # Reduced from 128Mi
+    value = "64Mi" # Sufficient for TLS operations
   }
 
   set {
     name  = "certController.resources.limits.cpu"
-    value = "50m" # Reduced from 200m
+    value = "100m"
   }
 
   set {
     name  = "certController.resources.limits.memory"
-    value = "64Mi" # Reduced from 256Mi
+    value = "128Mi"
   }
 
   # Service account for IRSA (IAM Roles for Service Accounts)
@@ -382,7 +382,7 @@ resource "helm_release" "signoz" {
   # Production configuration with adequate resources
   values = [
     yamlencode({
-      # ClickHouse configuration
+      # ClickHouse configuration - BALANCED for t3.large staging
       clickhouse = {
         persistence = {
           enabled = true
@@ -390,79 +390,72 @@ resource "helm_release" "signoz" {
         }
         resources = {
           requests = {
-            cpu    = "1000m" # Production: 1 CPU guaranteed
-            memory = "4Gi"   # Production: 4GB guaranteed
+            cpu    = "500m" # Staging: 0.5 CPU (reduced from 1000m)
+            memory = "1Gi"  # Staging: 1GB (reduced from 4Gi)
           }
           limits = {
-            cpu    = "2000m" # Production: up to 2 CPU
-            memory = "8Gi"   # Production: up to 8GB
+            cpu    = "1000m" # Staging: up to 1 CPU (reduced from 2000m)
+            memory = "2Gi"   # Staging: up to 2GB (reduced from 8Gi)
           }
         }
       }
-      # AWS ACADEMY: Use reduced resources to fit in t3.medium nodes
-      # clickhouse.resources.requests: cpu="100m", memory="256Mi"
-      # clickhouse.resources.limits: cpu="500m", memory="1Gi"
 
-      # Query Service
+      # Query Service - BALANCED for t3.large staging
       queryService = {
         resources = {
           requests = {
-            cpu    = "500m" # Production: 0.5 CPU
-            memory = "1Gi"  # Production: 1GB
+            cpu    = "200m"  # Staging: 0.2 CPU (reduced from 500m)
+            memory = "256Mi" # Staging: 256MB (reduced from 1Gi)
           }
           limits = {
-            cpu    = "1000m" # Production: up to 1 CPU
-            memory = "2Gi"   # Production: up to 2GB
+            cpu    = "500m"  # Staging: up to 0.5 CPU (reduced from 1000m)
+            memory = "512Mi" # Staging: up to 512MB (reduced from 2Gi)
           }
         }
       }
-      # AWS ACADEMY: Use cpu="100m", memory="256Mi" (requests) and cpu="500m", memory="512Mi" (limits)
 
-      # Frontend
+      # Frontend - BALANCED for t3.large staging
       frontend = {
         resources = {
           requests = {
-            cpu    = "200m"  # Production: 0.2 CPU
-            memory = "512Mi" # Production: 512MB
+            cpu    = "100m"  # Staging: 0.1 CPU (reduced from 200m)
+            memory = "128Mi" # Staging: 128MB (reduced from 512Mi)
           }
           limits = {
-            cpu    = "500m" # Production: up to 0.5 CPU
-            memory = "1Gi"  # Production: up to 1GB
+            cpu    = "200m"  # Staging: up to 0.2 CPU (reduced from 500m)
+            memory = "256Mi" # Staging: up to 256MB (reduced from 1Gi)
           }
         }
       }
-      # AWS ACADEMY: Use cpu="50m", memory="128Mi" (requests) and cpu="200m", memory="256Mi" (limits)
 
-      # OTel Collector
+      # OTel Collector - BALANCED for t3.large staging
       otelCollector = {
         resources = {
           requests = {
-            cpu    = "500m" # Production: 0.5 CPU
-            memory = "1Gi"  # Production: 1GB
+            cpu    = "200m"  # Staging: 0.2 CPU (reduced from 500m)
+            memory = "256Mi" # Staging: 256MB (reduced from 1Gi)
           }
           limits = {
-            cpu    = "1000m" # Production: up to 1 CPU
-            memory = "2Gi"   # Production: up to 2GB
+            cpu    = "500m"  # Staging: up to 0.5 CPU (reduced from 1000m)
+            memory = "512Mi" # Staging: up to 512MB (reduced from 2Gi)
           }
         }
       }
-      # AWS ACADEMY: Use cpu="100m", memory="256Mi" (requests) and cpu="500m", memory="512Mi" (limits)
 
-      # Alertmanager
+      # Alertmanager - BALANCED for t3.large staging
       alertmanager = {
         enabled = true
         resources = {
           requests = {
-            cpu    = "100m"  # Production: 0.1 CPU
-            memory = "256Mi" # Production: 256MB
+            cpu    = "50m"  # Staging: 0.05 CPU (reduced from 100m)
+            memory = "64Mi" # Staging: 64MB (reduced from 256Mi)
           }
           limits = {
-            cpu    = "200m"  # Production: up to 0.2 CPU
-            memory = "512Mi" # Production: up to 512MB
+            cpu    = "100m"  # Staging: up to 0.1 CPU (reduced from 200m)
+            memory = "128Mi" # Staging: up to 128MB (reduced from 512Mi)
           }
         }
       }
-      # AWS ACADEMY: Use cpu="50m", memory="64Mi" (requests) and cpu="100m", memory="128Mi" (limits)
     })
   ]
 }

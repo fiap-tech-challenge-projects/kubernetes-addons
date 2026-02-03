@@ -71,7 +71,7 @@ variable "app_namespace" {
 variable "enable_signoz" {
   description = "Habilitar instalacao do SigNoz para observabilidade"
   type        = bool
-  default     = false # DISABLED: Too resource-heavy for t3.medium (requires ~3GB RAM)
+  default     = true # ENABLED: t3.large has sufficient RAM (~7GB available)
 }
 
 variable "signoz_namespace" {
@@ -115,7 +115,7 @@ variable "aws_lb_controller_version" {
 variable "enable_metrics_server" {
   description = "Habilitar Metrics Server (necessario para HPA)"
   type        = bool
-  default     = false # DISABLED: Not needed in staging without HPA
+  default     = true # ENABLED: Required for HPA and monitoring
 }
 
 # -----------------------------------------------------------------------------
