@@ -95,6 +95,13 @@ resource "helm_release" "aws_lb_controller" {
     value = local.vpc_id
   }
 
+  # CRITICAL FIX: Reduce replicas to 1 for resource-constrained environments
+  # Default is 2 replicas which causes "Insufficient memory, Too many pods" errors
+  set {
+    name  = "replicaCount"
+    value = "1"
+  }
+
   # Resource requests for controller pods
   set {
     name  = "resources.requests.cpu"
@@ -212,6 +219,12 @@ resource "helm_release" "external_secrets" {
     value = "true"
   }
 
+  # Reduce replicas for resource-constrained environments
+  set {
+    name  = "replicaCount"
+    value = "1"
+  }
+
   # Controller resources (main operator)
   set {
     name  = "resources.requests.cpu"
@@ -231,6 +244,12 @@ resource "helm_release" "external_secrets" {
   set {
     name  = "resources.limits.memory"
     value = "512Mi"
+  }
+
+  # Reduce webhook replicas
+  set {
+    name  = "webhook.replicaCount"
+    value = "1"
   }
 
   # Webhook resources (validates ExternalSecret CRDs)
