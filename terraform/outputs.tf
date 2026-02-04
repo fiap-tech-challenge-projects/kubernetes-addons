@@ -40,6 +40,30 @@ output "external_secrets_namespace" {
 }
 
 # -----------------------------------------------------------------------------
+# IRSA IAM Roles
+# -----------------------------------------------------------------------------
+
+output "app_secrets_access_role_arn_staging" {
+  description = "ARN da IAM Role para acesso aos Secrets Manager - Staging"
+  value       = aws_iam_role.app_secrets_access_staging.arn
+}
+
+output "app_secrets_access_role_name_staging" {
+  description = "Nome da IAM Role para acesso aos Secrets Manager - Staging"
+  value       = aws_iam_role.app_secrets_access_staging.name
+}
+
+output "app_secrets_access_role_arn_production" {
+  description = "ARN da IAM Role para acesso aos Secrets Manager - Production"
+  value       = aws_iam_role.app_secrets_access_production.arn
+}
+
+output "app_secrets_access_role_name_production" {
+  description = "Nome da IAM Role para acesso aos Secrets Manager - Production"
+  value       = aws_iam_role.app_secrets_access_production.name
+}
+
+# -----------------------------------------------------------------------------
 # CloudWatch Dashboards
 # -----------------------------------------------------------------------------
 
@@ -84,6 +108,10 @@ output "summary" {
       - AWS Load Balancer Controller: ${var.enable_aws_lb_controller ? "Instalado" : "Desabilitado"}
       - External Secrets Operator: ${var.enable_external_secrets ? "Instalado (v${var.external_secrets_version})" : "Desabilitado"}
       - Metrics Server: ${var.enable_metrics_server ? "Instalado" : "Desabilitado"}
+
+    IRSA Roles (IAM Roles for Service Accounts):
+      - Staging: ${aws_iam_role.app_secrets_access_staging.name}
+      - Production: ${aws_iam_role.app_secrets_access_production.name}
 
     Observabilidade:
       - CloudWatch Container Insights (nativo AWS)
