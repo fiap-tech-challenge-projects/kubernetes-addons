@@ -8,7 +8,7 @@
 
 set -e
 
-CLUSTER_NAME="${CLUSTER_NAME:-ftc-eks-staging}"
+CLUSTER_NAME="${CLUSTER_NAME:-ftc-eks-development}"
 AWS_REGION="${AWS_REGION:-us-east-1}"
 
 echo "============================================================================="

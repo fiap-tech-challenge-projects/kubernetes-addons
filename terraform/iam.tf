@@ -18,12 +18,12 @@ data "aws_iam_openid_connect_provider" "eks" {
 }
 
 # -----------------------------------------------------------------------------
-# IAM Role for Application Pods - Staging
+# IAM Role for Application Pods - Development
 # -----------------------------------------------------------------------------
-# Allows pods in ftc-app-staging namespace to access Secrets Manager
+# Allows pods in ftc-app-development namespace to access Secrets Manager
 
-resource "aws_iam_role" "app_secrets_access_staging" {
-  name = "${var.project_name}-secrets-access-staging"
+resource "aws_iam_role" "app_secrets_access_development" {
+  name = "${var.project_name}-secrets-access-development"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -36,7 +36,7 @@ resource "aws_iam_role" "app_secrets_access_staging" {
         Action = "sts:AssumeRoleWithWebIdentity"
         Condition = {
           StringEquals = {
-            "${replace(data.aws_iam_openid_connect_provider.eks.url, "https://", "")}:sub" = "system:serviceaccount:${var.app_namespace}-staging:fiap-tech-challenge-api"
+            "${replace(data.aws_iam_openid_connect_provider.eks.url, "https://", "")}:sub" = "system:serviceaccount:${var.app_namespace}-development:fiap-tech-challenge-api"
             "${replace(data.aws_iam_openid_connect_provider.eks.url, "https://", "")}:aud" = "sts.amazonaws.com"
           }
         }
@@ -49,9 +49,9 @@ resource "aws_iam_role" "app_secrets_access_staging" {
 }
 
 # Policy allowing read access to Secrets Manager
-resource "aws_iam_policy" "secrets_manager_read_staging" {
-  name        = "${var.project_name}-secrets-manager-read-staging"
-  description = "Allow application pods to read secrets from AWS Secrets Manager - Staging"
+resource "aws_iam_policy" "secrets_manager_read_development" {
+  name        = "${var.project_name}-secrets-manager-read-development"
+  description = "Allow application pods to read secrets from AWS Secrets Manager - Development"
 
   policy = jsonencode({
     Version = "2012-10-17"
@@ -63,7 +63,7 @@ resource "aws_iam_policy" "secrets_manager_read_staging" {
           "secretsmanager:DescribeSecret"
         ]
         Resource = [
-          "arn:aws:secretsmanager:${var.aws_region}:${data.aws_caller_identity.current.account_id}:secret:${var.project_name}/staging/*"
+          "arn:aws:secretsmanager:${var.aws_region}:${data.aws_caller_identity.current.account_id}:secret:${var.project_name}/development/*"
         ]
       }
     ]
@@ -73,9 +73,9 @@ resource "aws_iam_policy" "secrets_manager_read_staging" {
   tags = {}
 }
 
-resource "aws_iam_role_policy_attachment" "app_secrets_access_staging" {
-  role       = aws_iam_role.app_secrets_access_staging.name
-  policy_arn = aws_iam_policy.secrets_manager_read_staging.arn
+resource "aws_iam_role_policy_attachment" "app_secrets_access_development" {
+  role       = aws_iam_role.app_secrets_access_development.name
+  policy_arn = aws_iam_policy.secrets_manager_read_development.arn
 }
 
 # -----------------------------------------------------------------------------

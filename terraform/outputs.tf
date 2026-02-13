@@ -6,9 +6,9 @@
 # Namespace Outputs
 # -----------------------------------------------------------------------------
 
-output "staging_namespace" {
-  description = "Namespace da aplicacao - Staging"
-  value       = kubernetes_namespace.staging.metadata[0].name
+output "development_namespace" {
+  description = "Namespace da aplicacao - Development"
+  value       = kubernetes_namespace.development.metadata[0].name
 }
 
 output "production_namespace" {
@@ -43,14 +43,14 @@ output "external_secrets_namespace" {
 # IRSA IAM Roles
 # -----------------------------------------------------------------------------
 
-output "app_secrets_access_role_arn_staging" {
-  description = "ARN da IAM Role para acesso aos Secrets Manager - Staging"
-  value       = aws_iam_role.app_secrets_access_staging.arn
+output "app_secrets_access_role_arn_development" {
+  description = "ARN da IAM Role para acesso aos Secrets Manager - Development"
+  value       = aws_iam_role.app_secrets_access_development.arn
 }
 
-output "app_secrets_access_role_name_staging" {
-  description = "Nome da IAM Role para acesso aos Secrets Manager - Staging"
-  value       = aws_iam_role.app_secrets_access_staging.name
+output "app_secrets_access_role_name_development" {
+  description = "Nome da IAM Role para acesso aos Secrets Manager - Development"
+  value       = aws_iam_role.app_secrets_access_development.name
 }
 
 output "app_secrets_access_role_arn_production" {
@@ -101,7 +101,7 @@ output "summary" {
     Cluster EKS: ${local.cluster_name}
 
     Namespaces Criados:
-      - ${kubernetes_namespace.staging.metadata[0].name} (Staging)
+      - ${kubernetes_namespace.development.metadata[0].name} (Development)
       - ${kubernetes_namespace.production.metadata[0].name} (Production)
 
     Addons Instalados:
@@ -110,7 +110,7 @@ output "summary" {
       - Metrics Server: ${var.enable_metrics_server ? "Instalado" : "Desabilitado"}
 
     IRSA Roles (IAM Roles for Service Accounts):
-      - Staging: ${aws_iam_role.app_secrets_access_staging.name}
+      - Development: ${aws_iam_role.app_secrets_access_development.name}
       - Production: ${aws_iam_role.app_secrets_access_production.name}
 
     Observabilidade:

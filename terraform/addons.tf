@@ -7,16 +7,16 @@
 # =============================================================================
 
 # -----------------------------------------------------------------------------
-# Namespace para Aplicacao - Staging (Homologacao)
+# Namespace para Aplicacao - Development (Homologacao)
 # -----------------------------------------------------------------------------
 
-resource "kubernetes_namespace" "staging" {
+resource "kubernetes_namespace" "development" {
   metadata {
-    name = "${var.app_namespace}-staging"
+    name = "${var.app_namespace}-development"
 
     labels = {
-      name        = "${var.app_namespace}-staging"
-      environment = "staging"
+      name        = "${var.app_namespace}-development"
+      environment = "development"
       managed-by  = "terraform"
     }
   }
@@ -60,7 +60,7 @@ resource "helm_release" "aws_lb_controller" {
 
   # Force dependency on namespaces to ensure they exist first
   depends_on = [
-    kubernetes_namespace.staging,
+    kubernetes_namespace.development,
     kubernetes_namespace.production
   ]
 
