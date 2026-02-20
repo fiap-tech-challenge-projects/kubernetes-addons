@@ -20,10 +20,10 @@ on:
       environment:
         description: 'Environment to deploy'
         required: true
-        default: 'staging'
+        default: 'development'
         type: choice
         options:
-          - staging
+          - development
           - production
       action:
         description: 'Terraform action to perform'
@@ -100,16 +100,16 @@ jobs:
         working-directory: ${{ env.TF_WORKING_DIR }}
 
   # ---------------------------------------------------------------------------
-  # Deploy to Staging (develop branch)
+  # Deploy to Development (develop branch)
   # ---------------------------------------------------------------------------
-  deploy-staging:
-    name: Deploy Staging
+  deploy-development:
+    name: Deploy Development
     runs-on: ubuntu-latest
     needs: validate
     if: |
       (github.ref == 'refs/heads/develop' && github.event_name == 'push') ||
-      (github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'staging' && github.event.inputs.action == 'apply')
-    environment: staging
+      (github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'development' && github.event.inputs.action == 'apply')
+    environment: development
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -144,11 +144,11 @@ jobs:
 
       - name: Terraform Workspace
         run: |
-          terraform workspace select staging || terraform workspace new staging
+          terraform workspace select development || terraform workspace new development
         working-directory: ${{ env.TF_WORKING_DIR }}
 
       - name: Terraform Plan
-        run: terraform plan -var="environment=staging" -out=tfplan
+        run: terraform plan -var="environment=development" -out=tfplan
         working-directory: ${{ env.TF_WORKING_DIR }}
 
       - name: Terraform Apply
@@ -158,20 +158,20 @@ jobs:
       - name: Get Outputs
         id: outputs
         run: |
-          echo "staging_namespace=$(terraform output -raw staging_namespace)" >> $GITHUB_OUTPUT
+          echo "development_namespace=$(terraform output -raw development_namespace)" >> $GITHUB_OUTPUT
           echo "production_namespace=$(terraform output -raw production_namespace)" >> $GITHUB_OUTPUT
         working-directory: ${{ env.TF_WORKING_DIR }}
 
       - name: Summary
         run: |
-          echo "## Staging K8s Addons Deployment Complete (Phase 2)" >> $GITHUB_STEP_SUMMARY
+          echo "## Development K8s Addons Deployment Complete (Phase 2)" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### Environment" >> $GITHUB_STEP_SUMMARY
-          echo "- **Environment:** staging" >> $GITHUB_STEP_SUMMARY
+          echo "- **Environment:** development" >> $GITHUB_STEP_SUMMARY
           echo "- **Branch:** develop" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### Namespaces Created" >> $GITHUB_STEP_SUMMARY
-          echo "- \`${{ steps.outputs.outputs.staging_namespace }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- \`${{ steps.outputs.outputs.development_namespace }}\`" >> $GITHUB_STEP_SUMMARY
           echo "- \`${{ steps.outputs.outputs.production_namespace }}\`" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### Installed Addons" >> $GITHUB_STEP_SUMMARY
@@ -237,7 +237,7 @@ jobs:
       - name: Get Outputs
         id: outputs
         run: |
-          echo "staging_namespace=$(terraform output -raw staging_namespace)" >> $GITHUB_OUTPUT
+          echo "development_namespace=$(terraform output -raw development_namespace)" >> $GITHUB_OUTPUT
           echo "production_namespace=$(terraform output -raw production_namespace)" >> $GITHUB_OUTPUT
         working-directory: ${{ env.TF_WORKING_DIR }}
 
@@ -250,7 +250,7 @@ jobs:
           echo "- **Branch:** main" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### Namespaces Created" >> $GITHUB_STEP_SUMMARY
-          echo "- \`${{ steps.outputs.outputs.staging_namespace }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- \`${{ steps.outputs.outputs.development_namespace }}\`" >> $GITHUB_STEP_SUMMARY
           echo "- \`${{ steps.outputs.outputs.production_namespace }}\`" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### Installed Addons" >> $GITHUB_STEP_SUMMARY
@@ -303,7 +303,7 @@ jobs:
           if [[ "${{ github.base_ref }}" == "main" ]]; then
             echo "environment=production" >> $GITHUB_OUTPUT
           else
-            echo "environment=staging" >> $GITHUB_OUTPUT
+            echo "environment=development" >> $GITHUB_OUTPUT
           fi
 
       - name: Terraform Workspace

@@ -8,7 +8,7 @@
 aws_region = "us-east-1"
 
 # Environment
-environment = "staging"  # staging ou production
+environment = "development"  # development ou production
 
 # Application Namespace
 app_namespace = "ftc-app"

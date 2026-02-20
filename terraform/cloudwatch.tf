@@ -304,7 +304,7 @@ resource "aws_cloudwatch_dashboard" "infrastructure" {
         type = "metric"
         properties = {
           metrics = [
-            ["ContainerInsights", "pod_cpu_utilization", "ClusterName", local.cluster_name, "Namespace", "${var.app_namespace}-staging", { stat = "Average" }],
+            ["ContainerInsights", "pod_cpu_utilization", "ClusterName", local.cluster_name, "Namespace", "${var.app_namespace}-development", { stat = "Average" }],
             [".", ".", ".", ".", ".", "${var.app_namespace}-production", { stat = "Average" }]
           ]
           view    = "timeSeries"
@@ -325,7 +325,7 @@ resource "aws_cloudwatch_dashboard" "infrastructure" {
         type = "metric"
         properties = {
           metrics = [
-            ["ContainerInsights", "pod_memory_utilization", "ClusterName", local.cluster_name, "Namespace", "${var.app_namespace}-staging", { stat = "Average" }],
+            ["ContainerInsights", "pod_memory_utilization", "ClusterName", local.cluster_name, "Namespace", "${var.app_namespace}-development", { stat = "Average" }],
             [".", ".", ".", ".", ".", "${var.app_namespace}-production", { stat = "Average" }]
           ]
           view    = "timeSeries"

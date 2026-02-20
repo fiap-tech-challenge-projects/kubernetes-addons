@@ -30,7 +30,7 @@ terraform plan
 ## What Gets Created
 
 ### Namespaces
-- `ftc-app-staging` - Staging application environment
+- `ftc-app-development` - Development application environment
 - `ftc-app-production` - Production application environment
 
 ### Helm Releases
@@ -77,7 +77,7 @@ The `infra-orchestrator` workflow automatically deploys both phases:
 
 ```bash
 # In infra-orchestrator repo
-gh workflow run deploy-all.yml --field environment=staging
+gh workflow run deploy-all.yml --field environment=development
 ```
 
 ## Configuration
@@ -86,7 +86,7 @@ gh workflow run deploy-all.yml --field environment=staging
 
 | Variable | Description | Default |
 |----------|-------------|---------|
-| `environment` | Environment (staging/production) | `development` |
+| `environment` | Environment (development/production) | `development` |
 | `app_namespace` | Base namespace name | `ftc-app` |
 | `enable_aws_lb_controller` | Install ALB Controller | `true` |
 | `enable_external_secrets` | Install External Secrets | `true` |
@@ -97,7 +97,7 @@ gh workflow run deploy-all.yml --field environment=staging
 After deployment, outputs include:
 
 ```bash
-terraform output staging_namespace      # ftc-app-staging
+terraform output development_namespace  # ftc-app-development
 terraform output production_namespace   # ftc-app-production
 ```
 
@@ -119,7 +119,7 @@ terraform apply
 
 **Solution**: Configure kubectl:
 ```bash
-aws eks update-kubeconfig --region us-east-1 --name fiap-tech-challenge-eks-staging
+aws eks update-kubeconfig --region us-east-1 --name fiap-tech-challenge-eks-development
 kubectl get nodes  # Verify access
 ```
 
